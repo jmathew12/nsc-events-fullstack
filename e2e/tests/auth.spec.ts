@@ -67,7 +67,7 @@ test.describe('Authentication', () => {
     expect(redirectedAway || hasSuccessMessage).toBeTruthy();
   });
 
-  test('should login with valid credentials', async ({ page, browserName }) => {
+  test('should login with valid credentials @smoke', async ({ page, browserName }) => {
     // Skip on Firefox due to CORS issues with API calls
     test.skip(browserName === "firefox",
       "Firefox has CORS issues with authenticated API requests - works in Chromium/WebKit");
@@ -115,7 +115,7 @@ test.describe('Authentication', () => {
     expect(hasUserMenu || hasMobileMenu).toBeTruthy();
   });
 
-  test('should show error on invalid login credentials', async ({ page }) => {
+  test('should show error on invalid login credentials @smoke', async ({ page }) => {
     await page.goto('/auth/sign-in');
 
     // Fill in invalid credentials

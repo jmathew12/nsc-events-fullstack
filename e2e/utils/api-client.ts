@@ -68,7 +68,7 @@ export class ApiClient {
   }
 
   async deleteEvent(id: string) {
-    return this.client.delete(`/events/${id}`);
+    return this.client.delete(`/events/remove/${id}`);
   }
 
   async archiveEvent(id: string) {

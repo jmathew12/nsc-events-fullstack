@@ -4,7 +4,7 @@ test.describe('Accessibility', () => {
   // Run accessibility tests serially to avoid cold-start race conditions
   test.describe.configure({ mode: 'serial' });
 
-  test('should have accessible navigation structure', async ({ page }) => {
+  test('should have accessible navigation structure @smoke', async ({ page }) => {
     // Increase timeout for cold start
     test.setTimeout(60000);
 
