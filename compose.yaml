@@ -1,51 +1,87 @@
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Docker Compose reference guide at
-# https://docs.docker.com/go/compose-spec-reference/
-
-# Here the instructions define your application as a service called "server".
-# This service is built from the Dockerfile in the current directory.
-# You can add other services your application may depend on here, such as a
-# database or a cache. For examples, see the Awesome Compose repository:
-# https://github.com/docker/awesome-compose
 services:
-  server:
-    build:
-      context: .
-    environment:
-      NODE_ENV: production
+  ###################################################
+  # Service: proxy
+  #
+  ###################################################
+  proxy:
+    image: traefik:v3.6
+    command: --providers.docker
     ports:
-      - 5432:5432
+      - 80:80
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
-# The commented out section below is an example of how to define a PostgreSQL
-# database that your application can use. `depends_on` tells Docker Compose to
-# start the database before your application. The `db-data` volume persists the
-# database data between container restarts. The `db-password` secret is used
-# to set the database password. You must create `db/password.txt` and add
-# a password of your choosing to it before running `docker-compose up`.
-#     depends_on:
-#       db:
-#         condition: service_healthy
-#   db:
-#     image: postgres
-#     restart: always
-#     user: postgres
-#     secrets:
-#       - db-password
-#     volumes:
-#       - db-data:/var/lib/postgresql/data
-#     environment:
-#       - POSTGRES_DB=example
-#       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
-#     expose:
-#       - 5432
-#     healthcheck:
-#       test: [ "CMD", "pg_isready" ]
-#       interval: 10s
-#       timeout: 5s
-#       retries: 5
-# volumes:
-#   db-data:
-# secrets:
-#   db-password:
-#     file: db/password.txt
+  ###################################################
+  # Service: backend
+  ###################################################
+  backend:
+    build:
+      context: ./
+      target: backend-dev
+    command: npm run start:dev
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DATABASE: nsc_events
+      JWT_SECRET: secret
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      traefik.http.routers.backend.rule: Host(`localhost`) && PathPrefix(`/api`)
+      traefik.http.services.backend.loadbalancer.server.port: 3000
 
+  ###################################################
+  # Service: client
+  ###################################################
+  client:
+    build:
+      context: ./
+      target: client-dev
+    ports:
+      - "3000:8080"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost/api
+    labels:
+      traefik.http.routers.client.rule: Host(`localhost`)
+      traefik.http.services.client.loadbalancer.server.port: 8080
+
+  ###################################################
+  # Service: postgres
+  ###################################################
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: nsc_events
+    ports:
+      - "3307:5432"
+    volumes:
+      - nsc-events-postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ###################################################
+  # Service: pgadmin
+  ###################################################
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    depends_on:
+      - postgres
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: 1234
+    ports:
+      - "5050:80"
+    labels:
+      traefik.http.routers.pgadmin.rule: Host(`db.localhost`)
+      traefik.http.services.pgadmin.loadbalancer.server.port: 80
+
+volumes:
+  nsc-events-postgres-data:

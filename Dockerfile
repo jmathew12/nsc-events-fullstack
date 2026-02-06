@@ -1,38 +1,48 @@
-# syntax=docker/dockerfile:1
-
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
-
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
-
-ARG NODE_VERSION=22
-
-FROM node:${NODE_VERSION}-alpine
-
-# Use production node environment by default.
-ENV NODE_ENV production
-
-
+###################################################
+# Stage: base
+###################################################
+FROM node:22 AS base
+# Set the working directory inside the container
 WORKDIR /usr/src/app
 
-# Download dependencies as a separate step to take advantage of Docker's caching.
-# Leverage a cache mount to /root/.npm to speed up subsequent builds.
-# Leverage a bind mounts to package.json and package-lock.json to avoid having to copy them into
-# into this layer.
-RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=package-lock.json,target=package-lock.json \
-    --mount=type=cache,target=/root/.npm \
-    npm ci --omit=dev
 
-# Run the application as a non-root user.
-USER node
+################## CLIENT STAGES ##################
+# Frontend - NEXTJS
+###################################################
+# Stage: client-base
+FROM base AS client-base
+COPY nsc-events-nextjs/ .
+RUN npm install 
+# Stage: client-dev
+FROM client-base AS client-dev
+CMD ["npm", "run", "dev"]
+# Stage client-build
+FROM client-base AS client-build
+RUN npm run build 
 
-# Copy the rest of the source files into the image.
-COPY . .
 
-# Expose the port that the application listens on.
-EXPOSE 5432
+################  BACKEND STAGES  #################
+# Backend - NESTJS
+###################################################
+# Stage: backend-base
+FROM base AS backend-dev
+COPY nsc-events-nestjs/ .
+RUN npm install
+CMD ["npm", "run", "dev"]
+# Stage: test
+FROM backend-dev AS test
+# Keep runInBand to avoid OOM in Docker Desktop
+RUN npm run test -- --runInBand
 
-# Run the application.
-CMD npm run dev
+
+###################################################
+# Stage: final (production backend)
+FROM base AS final-image
+ENV NODE_ENV=production
+COPY --from=test  /usr/local/app/package.json /usr/local/app/package-lock.json ./
+RUN npm ci --production && \
+    npm cache clean --force
+COPY nsc-events-nestjs/src ./src
+COPY --from=client-build /usr/src/app/.dist ./dist/static
+EXPOSE 3000
+CMD ["node", "src/index.js"]
