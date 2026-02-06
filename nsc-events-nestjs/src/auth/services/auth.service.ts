@@ -37,7 +37,7 @@ export class AuthService {
     private readonly userRepository: Repository<User>,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
-  ) { }
+  ) {}
 
   // Request password reset - now with actual email sending and token storage
   async requestPasswordReset(email: string): Promise<{ message: string }> {
@@ -125,7 +125,9 @@ export class AuthService {
       fullUser.password,
     );
     if (isSameAsCurrentPassword) {
-      throw new BadRequestException('New password must be different from your current password');
+      throw new BadRequestException(
+        'New password must be different from your current password',
+      );
     }
 
     // Hash the new password
@@ -261,7 +263,9 @@ export class AuthService {
       user.password,
     );
     if (isSameAsCurrentPassword) {
-      throw new BadRequestException('New password must be different from your current password');
+      throw new BadRequestException(
+        'New password must be different from your current password',
+      );
     }
 
     // Hash new password
