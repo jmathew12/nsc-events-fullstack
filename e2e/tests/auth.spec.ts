@@ -3,24 +3,47 @@ import { generateTestUser } from '../data/test-data';
 
 // Helper function to set authentication token reliably across all browsers
 async function setAuthToken(page: Page, token: string): Promise<void> {
-  await page.goto("/");
-  await page.waitForLoadState("domcontentloaded");
-
-  // Set token and verify it's set
-  await page.evaluate((t) => {
+  await page.addInitScript((t) => {
     localStorage.setItem("token", t);
     window.dispatchEvent(new CustomEvent("auth-change"));
   }, token);
 
-  // Wait and verify token is set (important for Firefox)
+  await page.goto("/");
+  await page.waitForLoadState("domcontentloaded");
+
   await page.waitForFunction(
     (expectedToken) => localStorage.getItem("token") === expectedToken,
     token,
-    { timeout: 5000 }
+    { timeout: 10000 },
   );
+}
 
-  // Additional wait for auth state to propagate
-  await page.waitForTimeout(500);
+async function waitForAuthPage(page: Page, pathRegex: RegExp): Promise<void> {
+  await page.waitForURL(pathRegex, { timeout: 10000 });
+  await page.waitForLoadState("domcontentloaded");
+  await page
+    .waitForLoadState("networkidle", { timeout: 15000 })
+    .catch(() => {});
+}
+
+async function waitForAuthForm(page: Page): Promise<void> {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await waitForAuthPage(page, /\/auth\/sign-in/i);
+
+    const emailInput = page.locator('input[name="email"], input[type="email"]');
+    const emailCount = await emailInput.count();
+    if (emailCount > 0) {
+      const firstEmail = emailInput.first();
+      await firstEmail.waitFor({ state: "attached", timeout: 30000 });
+      await firstEmail.scrollIntoViewIfNeeded();
+      await firstEmail.waitFor({ state: "visible", timeout: 30000 });
+      return;
+    }
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+  }
+
+  throw new Error("Sign-in form not found after retries");
 }
 
 test.describe('Authentication', () => {
@@ -85,14 +108,14 @@ test.describe('Authentication', () => {
     expect(apiResponse.ok()).toBeTruthy();
 
     // Navigate to login page
-    await page.goto('/auth/sign-in');
+    await page.goto("/auth/sign-in", { waitUntil: "domcontentloaded" });
 
     // Wait for form to be ready
-    await page.waitForSelector('input[name="email"]', { timeout: 5000 });
+    await waitForAuthForm(page);
 
     // Fill in login credentials
-    await page.fill('input[name="email"]', testUser.email);
-    await page.fill('input[name="password"]', testUser.password);
+    await page.getByRole("textbox", { name: /email/i }).fill(testUser.email);
+    await page.getByLabel(/password/i).fill(testUser.password);
 
     // Submit the form
     await page.click('button[type="submit"]');
@@ -116,11 +139,15 @@ test.describe('Authentication', () => {
   });
 
   test('should show error on invalid login credentials', async ({ page }) => {
-    await page.goto('/auth/sign-in');
+    await page.goto("/auth/sign-in", { waitUntil: "domcontentloaded" });
+
+    await waitForAuthForm(page);
 
     // Fill in invalid credentials
-    await page.fill('input[name="email"]', 'nonexistent@example.com');
-    await page.fill('input[name="password"]', 'wrongpassword');
+    await page
+      .getByRole("textbox", { name: /email/i })
+      .fill("nonexistent@example.com");
+    await page.getByLabel(/password/i).fill("wrongpassword");
 
     // Submit the form
     await page.click('button[type="submit"]');
@@ -190,7 +217,9 @@ test.describe('Authentication', () => {
   });
 
   test('should navigate to forgot password page', async ({ page }) => {
-    await page.goto('/auth/sign-in');
+    await page.goto("/auth/sign-in", { waitUntil: "domcontentloaded" });
+
+    await waitForAuthForm(page);
 
     // Click forgot password link
     const forgotPasswordLink = page.locator('a:has-text("Forgot password"), a:has-text("forgot"), button:has-text("forgot")').first();
@@ -212,8 +241,10 @@ test.describe('Authentication', () => {
     // Navigate to forgot password
     await page.goto('/auth/forgot-password');
 
+    await waitForAuthPage(page, /\/auth\/forgot-password/i);
+
     // Enter email
-    await page.fill('input[name="email"]', testUser.email);
+    await page.getByRole("textbox", { name: /email/i }).fill(testUser.email);
 
     // Submit
     await page.click('button[type="submit"]');
