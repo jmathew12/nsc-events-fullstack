@@ -9,33 +9,19 @@
  * @returns The normalized activity with consistent id fields
  */
 export function normalizeActivityId<T extends Record<string, any>>(activity: T | null): T | null {
-  if (!activity) {
-    return null;
-  }
-
+  if (!activity) return null;
+  
   // Use type assertion to work with dynamic properties
   const normalized = { ...activity } as Record<string, any>;
-
+  
   // If activity has id but no _id, add _id field for MongoDB compatibility
   if (normalized.id !== undefined && normalized._id === undefined) {
     normalized._id = normalized.id;
   }
-
+  
   // If activity has _id but no id, add id field for PostgreSQL compatibility
   if (normalized._id !== undefined && normalized.id === undefined) {
     normalized.id = normalized._id;
-  }
-
-  // Transform PostgreSQL tags array to eventTags string array
-  // PostgreSQL returns: tags: [{id, name, slug, ...}, ...]
-  // Frontend expects: eventTags: ["tag1", "tag2", ...]
-  if (normalized.tags && Array.isArray(normalized.tags)) {
-    normalized.eventTags = normalized.tags.map((tag: any) =>
-      typeof tag === "string" ? tag : tag.name,
-    );
-  } else if (!normalized.eventTags) {
-    // Ensure eventTags always exists as an empty array if not present
-    normalized.eventTags = [];
   }
   
   return normalized as T;
@@ -47,9 +33,7 @@ export function normalizeActivityId<T extends Record<string, any>>(activity: T |
  * @returns Array of normalized activities
  */
 export function normalizeActivityIds<T extends Record<string, any>>(activities: T[] | null): T[] {
-  if (!activities) {
-    return [] as T[];
-  }
+  if (!activities) return [] as T[];
   
   return activities.map(activity => normalizeActivityId(activity) as T);
 }
@@ -60,8 +44,6 @@ export function normalizeActivityIds<T extends Record<string, any>>(activities: 
  * @returns The activity ID as a string, or undefined if not found
  */
 export function getActivityId(activity: Record<string, any> | null | undefined): string | undefined {
-  if (!activity) {
-    return undefined;
-  }
+  if (!activity) return undefined;
   return activity.id ?? activity._id;
 }
