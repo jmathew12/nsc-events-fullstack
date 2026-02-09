@@ -27,10 +27,9 @@ describe('dbFieldMapper', () => {
         const result = normalizeActivityId(input);
 
         expect(result).toEqual({
-          id: "test-123",
-          _id: "test-123",
-          name: "Test Activity",
-          eventTags: [],
+          id: 'test-123',
+          _id: 'test-123',
+          name: 'Test Activity',
         });
       });
 
@@ -41,8 +40,7 @@ describe('dbFieldMapper', () => {
         expect(result).toEqual({
           id: 456,
           _id: 456,
-          name: "Test Activity",
-          eventTags: [],
+          name: 'Test Activity',
         });
       });
 
@@ -61,10 +59,9 @@ describe('dbFieldMapper', () => {
         const result = normalizeActivityId(input);
 
         expect(result).toEqual({
-          id: "mongo-456",
-          _id: "mongo-456",
-          name: "Test Activity",
-          eventTags: [],
+          id: 'mongo-456',
+          _id: 'mongo-456',
+          name: 'Test Activity',
         });
       });
 
@@ -83,10 +80,9 @@ describe('dbFieldMapper', () => {
         const result = normalizeActivityId(input);
 
         expect(result).toEqual({
-          id: "pg-123",
-          _id: "mongo-456",
-          name: "Test",
-          eventTags: [],
+          id: 'pg-123',
+          _id: 'mongo-456',
+          name: 'Test',
         });
       });
 
@@ -222,7 +218,7 @@ describe('dbFieldMapper', () => {
         const input: TestActivity = { name: 'Test', value: 42 };
         const result = normalizeActivityId(input);
 
-        expect(result).toEqual({ name: "Test", value: 42, eventTags: [] });
+        expect(result).toEqual({ name: 'Test', value: 42 });
         expect(result).not.toHaveProperty('id');
         expect(result).not.toHaveProperty('_id');
       });
@@ -295,24 +291,9 @@ describe('dbFieldMapper', () => {
         const result = normalizeActivityIds(input);
 
         expect(result).toHaveLength(3);
-        expect(result[0]).toEqual({
-          id: "1",
-          _id: "1",
-          name: "First",
-          eventTags: [],
-        });
-        expect(result[1]).toEqual({
-          id: "2",
-          _id: "2",
-          name: "Second",
-          eventTags: [],
-        });
-        expect(result[2]).toEqual({
-          id: "3",
-          _id: "3",
-          name: "Third",
-          eventTags: [],
-        });
+        expect(result[0]).toEqual({ id: '1', _id: '1', name: 'First' });
+        expect(result[1]).toEqual({ id: '2', _id: '2', name: 'Second' });
+        expect(result[2]).toEqual({ id: '3', _id: '3', name: 'Third' });
       });
 
       it('should handle mixed id sources in array', () => {
@@ -565,87 +546,6 @@ describe('dbFieldMapper', () => {
         expect(getActivityId(normalized[1])).toBe('id-2');
         // For the third item, id takes priority
         expect(getActivityId(normalized[2])).toBe('id-3');
-      });
-    });
-
-    describe("PostgreSQL tags to eventTags transformation", () => {
-      it("should transform PostgreSQL tags array to eventTags string array", () => {
-        const input: TestActivity = {
-          id: "test-123",
-          name: "Test Event",
-          tags: [
-            { id: "tag-1", name: "Technology", slug: "technology" },
-            { id: "tag-2", name: "Workshop", slug: "workshop" },
-          ] as any,
-        };
-        const result = normalizeActivityId(input);
-
-        expect(result?.eventTags).toEqual(["Technology", "Workshop"]);
-      });
-
-      it("should handle empty tags array", () => {
-        const input: TestActivity = {
-          id: "test-123",
-          name: "Test Event",
-          tags: [] as any,
-        };
-        const result = normalizeActivityId(input);
-
-        expect(result?.eventTags).toEqual([]);
-      });
-
-      it("should handle tags as strings", () => {
-        const input: TestActivity = {
-          id: "test-123",
-          name: "Test Event",
-          tags: ["Tech", "Workshop"] as any,
-        };
-        const result = normalizeActivityId(input);
-
-        expect(result?.eventTags).toEqual(["Tech", "Workshop"]);
-      });
-
-      it("should add empty eventTags when tags is missing", () => {
-        const input: TestActivity = {
-          id: "test-123",
-          name: "Test Event",
-        };
-        const result = normalizeActivityId(input);
-
-        expect(result?.eventTags).toEqual([]);
-      });
-
-      it("should preserve existing eventTags if no tags property", () => {
-        const input: TestActivity = {
-          id: "test-123",
-          name: "Test Event",
-          eventTags: ["Existing", "Tags"],
-        };
-        const result = normalizeActivityId(input);
-
-        expect(result?.eventTags).toEqual(["Existing", "Tags"]);
-      });
-
-      it("should transform tags array in multiple activities", () => {
-        const input: TestActivity[] = [
-          {
-            id: "1",
-            tags: [{ name: "Tech" }, { name: "Workshop" }] as any,
-          },
-          {
-            id: "2",
-            tags: [{ name: "Cultural" }] as any,
-          },
-          {
-            id: "3",
-            tags: [] as any,
-          },
-        ];
-        const result = normalizeActivityIds(input);
-
-        expect(result[0]?.eventTags).toEqual(["Tech", "Workshop"]);
-        expect(result[1]?.eventTags).toEqual(["Cultural"]);
-        expect(result[2]?.eventTags).toEqual([]);
       });
     });
   });
