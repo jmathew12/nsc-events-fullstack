@@ -1,0 +1,118 @@
+services:
+
+  ###################################################
+  # Service: proxy
+  ###################################################
+  proxy:
+    image: traefik:v3.6
+    container_name: traefik
+    command:
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+  
+
+  ###################################################
+  # Service: backend (NestJS)
+  ###################################################
+  nestjs:
+    build:
+      context: ./nsc-events-nestjs
+      dockerfile: Dockerfile
+      target: development
+    container_name: nestjs-dev
+    env_file:
+      - ./nsc-events-nestjs/.env
+    volumes:
+      - ./nsc-events-nestjs:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.backend.rule=Host(`localhost`) && PathPrefix(`/api`)
+      - traefik.http.routers.backend.entrypoints=web
+      - traefik.http.services.backend.loadbalancer.server.port=3000
+
+  ###################################################
+  # Service: frontend (Next.js)
+  ###################################################
+  nextjs:
+    build:
+      context: ./nsc-events-nextjs
+      dockerfile: Dockerfile
+      target: development
+    container_name: nextjs-dev
+    env_file:
+      - ./nsc-events-nextjs/.env
+    volumes:
+      - ./nsc-events-nextjs:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - nestjs
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.frontend.rule=Host(`localhost`)
+      - traefik.http.routers.frontend.entrypoints=web
+      - traefik.http.routers.frontend.priority=1
+      - traefik.http.services.frontend.loadbalancer.server.port=3000
+
+  ###################################################
+  # Service: postgres
+  ###################################################
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+    ports:
+      - "3307:5432"
+    volumes:
+      - nsc-events-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  ###################################################
+  # Service: pgadmin
+  ###################################################
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin-dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: ${PGADMIN_CONFIG_SERVER_MODE}
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: ${PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED}
+    ports:
+      - "5050:80"
+    volumes:
+      - nsc-events-pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.pgadmin.rule=Host(`db.localhost`)
+      - traefik.http.routers.pgadmin.entrypoints=web
+      - traefik.http.services.pgadmin.loadbalancer.server.port=80
+
+volumes:
+  nsc-events-postgres-data:
+  nsc-events-pgadmin-data:
