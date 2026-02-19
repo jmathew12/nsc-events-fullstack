@@ -31,7 +31,7 @@ test.describe('User Management & Admin Functions', () => {
       firstName: 'Admin',
     });
 
-    const signupResponse = await page.request.post('http://localhost:3000/api/auth/signup', {
+    const signupResponse = await page.request.post('http://localhost/api/auth/signup', {
       data: adminUser,
     });
 
@@ -41,7 +41,7 @@ test.describe('User Management & Admin Functions', () => {
 
       // Create a regular user for role management tests
       const regularUser = generateTestUser();
-      const userSignupResponse = await page.request.post('http://localhost:3000/api/auth/signup', {
+      const userSignupResponse = await page.request.post('http://localhost/api/auth/signup', {
         data: regularUser,
       });
 

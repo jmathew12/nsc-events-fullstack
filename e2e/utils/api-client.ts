@@ -4,7 +4,7 @@ export class ApiClient {
   private client: AxiosInstance;
   private token: string | null = null;
 
-  constructor(baseURL: string = process.env.PLAYWRIGHT_API_URL || "http://localhost:3000/api") {
+  constructor(baseURL: string = process.env.PLAYWRIGHT_API_URL || "http://localhost/api") {
     this.client = axios.create({
       baseURL,
       headers: {
@@ -68,7 +68,7 @@ export class ApiClient {
   }
 
   async deleteEvent(id: string) {
-    return this.client.delete(`/events/${id}`);
+    return this.client.delete(`/events/remove/${id}`);
   }
 
   async archiveEvent(id: string) {

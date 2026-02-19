@@ -30,6 +30,7 @@ describe('dbFieldMapper', () => {
           id: 'test-123',
           _id: 'test-123',
           name: 'Test Activity',
+          eventTags: [],
         });
       });
 
@@ -41,6 +42,7 @@ describe('dbFieldMapper', () => {
           id: 456,
           _id: 456,
           name: 'Test Activity',
+          eventTags: [],
         });
       });
 
@@ -62,6 +64,7 @@ describe('dbFieldMapper', () => {
           id: 'mongo-456',
           _id: 'mongo-456',
           name: 'Test Activity',
+          eventTags: [],
         });
       });
 
@@ -83,6 +86,7 @@ describe('dbFieldMapper', () => {
           id: 'pg-123',
           _id: 'mongo-456',
           name: 'Test',
+          eventTags: [],
         });
       });
 
@@ -214,11 +218,11 @@ describe('dbFieldMapper', () => {
     });
 
     describe('when neither id nor _id exist', () => {
-      it('should return object unchanged', () => {
+      it('should return object with eventTags added', () => {
         const input: TestActivity = { name: 'Test', value: 42 };
         const result = normalizeActivityId(input);
 
-        expect(result).toEqual({ name: 'Test', value: 42 });
+        expect(result).toEqual({ name: 'Test', value: 42, eventTags: [] });
         expect(result).not.toHaveProperty('id');
         expect(result).not.toHaveProperty('_id');
       });
@@ -291,9 +295,9 @@ describe('dbFieldMapper', () => {
         const result = normalizeActivityIds(input);
 
         expect(result).toHaveLength(3);
-        expect(result[0]).toEqual({ id: '1', _id: '1', name: 'First' });
-        expect(result[1]).toEqual({ id: '2', _id: '2', name: 'Second' });
-        expect(result[2]).toEqual({ id: '3', _id: '3', name: 'Third' });
+        expect(result[0]).toEqual({ id: '1', _id: '1', name: 'First', eventTags: [] });
+        expect(result[1]).toEqual({ id: '2', _id: '2', name: 'Second', eventTags: [] });
+        expect(result[2]).toEqual({ id: '3', _id: '3', name: 'Third', eventTags: [] });
       });
 
       it('should handle mixed id sources in array', () => {

@@ -408,6 +408,7 @@ describe('ActivityService', () => {
       expect(result).toEqual(mockActivity);
       expect(activityRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'activity-123' },
+        relations: ['tags', 'coverPhoto', 'document'],
       });
     });
 

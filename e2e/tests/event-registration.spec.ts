@@ -6,7 +6,7 @@ async function signupWithRetry(page, data, attempts = 3) {
   for (let i = 0; i < attempts; i += 1) {
     try {
       const response = await page.request.post(
-        "http://localhost:3000/api/auth/signup",
+        "http://localhost/api/auth/signup",
         {
           data,
         },
@@ -40,7 +40,7 @@ test.describe('Event Registration', () => {
       userToken = data.token;
 
       // Create an event
-      const createEventResponse = await page.request.post('http://localhost:3000/api/event-registration', {
+      const createEventResponse = await page.request.post('http://localhost/api/event-registration', {
         headers: {
           Authorization: `Bearer ${userToken}`,
         },

@@ -1,5 +1,5 @@
-import { test, expect, Page } from '@playwright/test';
-import { generateTestUser } from '../data/test-data';
+import { test, expect, Page } from "@playwright/test";
+import { generateTestUser } from "../data/test-data";
 
 // Helper function to set authentication token reliably across all browsers
 async function setAuthToken(page: Page, token: string): Promise<void> {
@@ -46,17 +46,19 @@ async function waitForAuthForm(page: Page): Promise<void> {
   throw new Error("Sign-in form not found after retries");
 }
 
-test.describe('Authentication', () => {
+test.describe("Authentication", () => {
   // Skip: UI signup test is flaky due to timing issues. Backend signup is tested via login test.
-  test.skip('should sign up a new user and redirect to home page', async ({ page }) => {
+  test.skip("should sign up a new user and redirect to home page", async ({
+    page,
+  }) => {
     test.setTimeout(45000);
     const testUser = generateTestUser();
 
     // Navigate to signup page
-    await page.goto('/auth/sign-up');
+    await page.goto("/auth/sign-up");
 
     // Wait for form to be ready and page to stabilize
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
     await page.waitForSelector('input[name="email"]', { timeout: 10000 });
     await page.waitForTimeout(500);
 
@@ -72,7 +74,9 @@ test.describe('Authentication', () => {
     await page.click('button[type="submit"]');
 
     // Wait for response (either network activity or URL change)
-    await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {});
+    await page
+      .waitForLoadState("networkidle", { timeout: 20000 })
+      .catch(() => {});
 
     // Give time for redirect to happen
     await page.waitForTimeout(2000);
@@ -84,26 +88,38 @@ test.describe('Authentication', () => {
     // 1. Redirected away from sign-up page
     // 2. OR still on sign-up but with success message
     // 3. OR on sign-in page (some apps redirect to sign-in after signup)
-    const redirectedAway = !currentUrl.includes('/auth/sign-up');
-    const hasSuccessMessage = await page.locator('text=/success|account created|welcome|check your email/i').first().isVisible().catch(() => false);
+    const redirectedAway = !currentUrl.includes("/auth/sign-up");
+    const hasSuccessMessage = await page
+      .locator("text=/success|account created|welcome|check your email/i")
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     expect(redirectedAway || hasSuccessMessage).toBeTruthy();
   });
 
-  test('should login with valid credentials', async ({ page, browserName }) => {
+  test("should login with valid credentials @smoke", async ({
+    page,
+    browserName,
+  }) => {
     // Skip on Firefox due to CORS issues with API calls
-    test.skip(browserName === "firefox",
-      "Firefox has CORS issues with authenticated API requests - works in Chromium/WebKit");
+    test.skip(
+      browserName === "firefox",
+      "Firefox has CORS issues with authenticated API requests - works in Chromium/WebKit",
+    );
 
     const testUser = generateTestUser();
 
     // First, create a user via API for this test
-    const apiResponse = await page.request.post('http://localhost:3000/api/auth/signup', {
-      data: testUser,
-    });
+    const apiResponse = await page.request.post(
+      "http://localhost/api/auth/signup",
+      {
+        data: testUser,
+      },
+    );
     if (!apiResponse.ok()) {
       const errorBody = await apiResponse.text();
-      console.error('Signup failed:', apiResponse.status(), errorBody);
+      console.error("Signup failed:", apiResponse.status(), errorBody);
     }
     expect(apiResponse.ok()).toBeTruthy();
 
@@ -122,7 +138,7 @@ test.describe('Authentication', () => {
 
     // Should be redirected based on role (admin -> /admin, creator -> /creator, user -> /)
     await page.waitForURL(/\/$|\/admin|\/creator/i, { timeout: 10000 });
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
     // Wait for auth state to propagate
     await page.waitForTimeout(3000);
@@ -138,10 +154,10 @@ test.describe('Authentication', () => {
     expect(hasUserMenu || hasMobileMenu).toBeTruthy();
   });
 
-  test('should show error on invalid login credentials', async ({ page }) => {
-    await page.goto("/auth/sign-in", { waitUntil: "domcontentloaded" });
-
-    await waitForAuthForm(page);
+  test("should show error on invalid login credentials @smoke", async ({
+    page,
+  }) => {
+    await page.goto("/auth/sign-in");
 
     // Fill in invalid credentials
     await page
@@ -153,17 +169,22 @@ test.describe('Authentication', () => {
     await page.click('button[type="submit"]');
 
     // Should show error message
-    const errorMessage = page.locator('[role="alert"], .error, [class*="error"]').first();
+    const errorMessage = page
+      .locator('[role="alert"], .error, [class*="error"]')
+      .first();
     await expect(errorMessage).toBeVisible({ timeout: 5000 });
   });
 
-  test('should logout successfully', async ({ page }) => {
+  test("should logout successfully", async ({ page }) => {
     const testUser = generateTestUser();
 
     // Sign up and login
-    const signupResponse = await page.request.post('http://localhost:3000/api/auth/signup', {
-      data: testUser,
-    });
+    const signupResponse = await page.request.post(
+      "http://localhost/api/auth/signup",
+      {
+        data: testUser,
+      },
+    );
     const signupData = await signupResponse.json();
     const token = signupData.token;
 
@@ -172,11 +193,15 @@ test.describe('Authentication', () => {
 
     // Reload to apply auth state
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000); // Wait for auth to fully initialize
 
     // Check if we're on mobile (drawer menu) or desktop (dropdown menu)
-    const isMobileMenuVisible = await page.locator('[aria-label="menu"]').first().isVisible().catch(() => false);
+    const isMobileMenuVisible = await page
+      .locator('[aria-label="menu"]')
+      .first()
+      .isVisible()
+      .catch(() => false);
 
     if (isMobileMenuVisible) {
       // Mobile: Open drawer menu
@@ -188,11 +213,13 @@ test.describe('Authentication', () => {
       await page.waitForTimeout(1000);
 
       // Wait for drawer content to be visible by checking for any drawer navigation
-      await page.waitForSelector('nav, [role="navigation"]', { timeout: 5000 }).catch(() => {});
+      await page
+        .waitForSelector('nav, [role="navigation"]', { timeout: 5000 })
+        .catch(() => {});
 
       // Click Sign out link in drawer (mobile uses a link, desktop uses a menuitem)
       // Use getByRole('link') to target the mobile drawer link specifically
-      const signOutLink = page.getByRole('link', { name: /sign out/i });
+      const signOutLink = page.getByRole("link", { name: /sign out/i });
       await expect(signOutLink).toBeVisible({ timeout: 10000 });
       await signOutLink.click();
     } else {
@@ -204,7 +231,7 @@ test.describe('Authentication', () => {
 
       // Click "Sign Out" MenuItem in dropdown menu
       // Using role="menuitem" to target the MenuItem component directly
-      const signOutMenuItem = page.getByRole('menuitem', { name: /sign out/i });
+      const signOutMenuItem = page.getByRole("menuitem", { name: /sign out/i });
       await expect(signOutMenuItem).toBeVisible({ timeout: 5000 });
       await signOutMenuItem.click();
     }
@@ -216,30 +243,39 @@ test.describe('Authentication', () => {
     await page.waitForURL(/\/auth\/sign-in/i, { timeout: 15000 });
   });
 
-  test('should navigate to forgot password page', async ({ page }) => {
+  test("should navigate to forgot password page", async ({ page }) => {
     await page.goto("/auth/sign-in", { waitUntil: "domcontentloaded" });
 
     await waitForAuthForm(page);
 
     // Click forgot password link
-    const forgotPasswordLink = page.locator('a:has-text("Forgot password"), a:has-text("forgot"), button:has-text("forgot")').first();
+    const forgotPasswordLink = page
+      .locator(
+        'a:has-text("Forgot password"), a:has-text("forgot"), button:has-text("forgot")',
+      )
+      .first();
     await forgotPasswordLink.click();
 
     // Should navigate to forgot password page
-    await page.waitForURL(/\/auth\/forgot-password|\/password-reset/i, { timeout: 5000 });
+    await page.waitForURL(/\/auth\/forgot-password|\/password-reset/i, {
+      timeout: 5000,
+    });
   });
 
-  test('should handle password reset flow', async ({ page }) => {
+  test("should handle password reset flow", async ({ page }) => {
     const testUser = generateTestUser();
 
     // Create a user
-    const signupResponse = await page.request.post('http://localhost:3000/api/auth/signup', {
-      data: testUser,
-    });
+    const signupResponse = await page.request.post(
+      "http://localhost/api/auth/signup",
+      {
+        data: testUser,
+      },
+    );
     expect(signupResponse.ok()).toBeTruthy();
 
     // Navigate to forgot password
-    await page.goto('/auth/forgot-password');
+    await page.goto("/auth/forgot-password");
 
     await waitForAuthPage(page, /\/auth\/forgot-password/i);
 
@@ -250,7 +286,9 @@ test.describe('Authentication', () => {
     await page.click('button[type="submit"]');
 
     // Should show success message
-    const successMessage = page.locator('[role="alert"], .success, [class*="success"]').first();
+    const successMessage = page
+      .locator('[role="alert"], .success, [class*="success"]')
+      .first();
     await expect(successMessage).toBeVisible({ timeout: 5000 });
   });
 });

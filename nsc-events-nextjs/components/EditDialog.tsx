@@ -223,7 +223,7 @@ const EditDialog = ({ isOpen, event, toggleEditDialog }: EditDialogProps) => {
                                 label="Event Tags"
                                 variant="outlined"
                                 name="eventTags"
-                                value={eventData.eventTags.join(', ')}
+                                value={(eventData.eventTags || []).join(', ')}
                                 onChange={(e) => {
                                     const tags = e.target.value.split(',').map(tag => tag.trim());
                                     handleInputChange({ target: { name: 'eventTags', value: tags } } as any);

@@ -168,7 +168,10 @@ export class ActivityService {
   // ----------------- Get Activity by ID ----------------- \\
   async getActivityById(id: string): Promise<Activity> {
     try {
-      const activity = await this.activityRepository.findOne({ where: { id } });
+      const activity = await this.activityRepository.findOne({
+        where: { id },
+        relations: ['tags', 'coverPhoto', 'document'],
+      });
 
       if (!activity) {
         throw new NotFoundException('Activity not found');

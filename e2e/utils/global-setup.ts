@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const apiURL = process.env.PLAYWRIGHT_API_URL || 'http://localhost:3000/api';
+const apiURL = process.env.PLAYWRIGHT_API_URL || 'http://localhost/api';
 
 async function globalSetup() {
   console.log('Starting global setup...');
