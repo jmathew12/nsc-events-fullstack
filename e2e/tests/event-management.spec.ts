@@ -356,7 +356,7 @@ test.describe("Event Management", () => {
     await expect(page.locator("text=/E2E Test Host|e2e-test@example.com/i").first()).toBeVisible();
   });
 
-  test("should view event details", async ({ page, browserName }) => {
+  test("should view event details @smoke", async ({ page, browserName }) => {
     // Skip on Firefox due to CORS issues with API calls in authenticated context
     test.skip(browserName === "firefox",
       "Firefox has CORS issues with authenticated API requests - works in Chromium/WebKit");
@@ -371,7 +371,7 @@ test.describe("Event Management", () => {
       eventLocation: eventData.location,
       eventHost: "API Test Host",
       eventCapacity: String(eventData.capacity),
-      eventTags: ["test", "e2e"],
+      tagNames: ["test", "e2e"],
       eventContact: "api-test@example.com",
       eventSocialMedia: { facebook: "", twitter: "", instagram: "", hashtag: "" },
     });
@@ -415,7 +415,7 @@ test.describe("Event Management", () => {
       eventLocation: eventData.location,
       eventHost: "Original Host",
       eventCapacity: String(eventData.capacity),
-      eventTags: ["test", "e2e"],
+      tagNames: ["test", "e2e"],
       eventContact: "original@example.com",
       eventSocialMedia: { facebook: "", twitter: "", instagram: "", hashtag: "" },
     });
@@ -514,7 +514,7 @@ test.describe("Event Management", () => {
       eventLocation: eventData.location,
       eventHost: "Archive Test Host",
       eventCapacity: String(eventData.capacity),
-      eventTags: ["test", "archive"],
+      tagNames: ["test", "archive"],
       eventContact: "archive@example.com",
       eventSocialMedia: { facebook: "", twitter: "", instagram: "", hashtag: "" },
     });
@@ -604,7 +604,7 @@ test.describe("Event Management", () => {
       eventLocation: eventData.location,
       eventHost: "Unarchive Test Host",
       eventCapacity: String(eventData.capacity),
-      eventTags: ["test", "unarchive"],
+      tagNames: ["test", "unarchive"],
       eventContact: "unarchive@example.com",
       eventSocialMedia: { facebook: "", twitter: "", instagram: "", hashtag: "" },
     });
@@ -668,7 +668,7 @@ test.describe("Event Management", () => {
     await expect(eventCard).toBeVisible({ timeout: 10000 });
   });
 
-  test("should search events", async ({ page }) => {
+  test("should search events @smoke", async ({ page }) => {
     await page.goto("/events");
     await page.waitForLoadState("networkidle");
 

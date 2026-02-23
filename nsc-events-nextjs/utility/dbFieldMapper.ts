@@ -10,20 +10,34 @@
  */
 export function normalizeActivityId<T extends Record<string, any>>(activity: T | null): T | null {
   if (!activity) return null;
-  
+
   // Use type assertion to work with dynamic properties
   const normalized = { ...activity } as Record<string, any>;
-  
+
   // If activity has id but no _id, add _id field for MongoDB compatibility
   if (normalized.id !== undefined && normalized._id === undefined) {
     normalized._id = normalized.id;
   }
-  
+
   // If activity has _id but no id, add id field for PostgreSQL compatibility
   if (normalized._id !== undefined && normalized.id === undefined) {
     normalized.id = normalized._id;
   }
-  
+
+  // Transform tags (array of Tag objects) to eventTags (array of strings)
+  // Backend returns: tags: [{ id, name, slug }]
+  // Frontend expects: eventTags: ["Technology", "Workshop"]
+  if (normalized.tags && Array.isArray(normalized.tags)) {
+    normalized.eventTags = normalized.tags.map((tag: any) =>
+      typeof tag === 'string' ? tag : tag.name || tag
+    );
+  }
+
+  // Ensure eventTags is always an array to prevent undefined errors
+  if (!normalized.eventTags) {
+    normalized.eventTags = [];
+  }
+
   return normalized as T;
 }
 

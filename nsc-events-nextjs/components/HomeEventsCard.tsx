@@ -181,7 +181,7 @@ function HomeEventsCard({ event }: EventCardProps) {
           <Box mt="auto">
             <Typography>
               Tags:
-              {event.eventTags.map((tag, index) => (
+              {(event.eventTags || []).map((tag, index) => (
                 <Box
                   key={index}
                   component="span"
