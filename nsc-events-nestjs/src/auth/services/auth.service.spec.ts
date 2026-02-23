@@ -217,9 +217,7 @@ describe('AuthService', () => {
   describe('changePassword', () => {
     it('should successfully change password', async () => {
       jest.spyOn(userRepository, 'findOne').mockResolvedValue(mockUser);
-      // jest
-      //   .spyOn(bcrypt, 'compare')
-      //   .mockImplementation(() => Promise.resolve(true));
+
       jest
         .spyOn(bcrypt, 'compare')
         .mockImplementationOnce(() => Promise.resolve(true))
@@ -351,9 +349,7 @@ describe('AuthService', () => {
       jest.spyOn(userRepository, 'find').mockResolvedValue([userWithToken]);
       jest.spyOn(userRepository, 'findOne').mockResolvedValue(userWithToken);
       jest.spyOn(userRepository, 'save').mockResolvedValue(userWithToken);
-      // jest
-      //   .spyOn(bcrypt, 'compare')
-      //   .mockImplementation(() => Promise.resolve(true));
+
       jest
         .spyOn(bcrypt, 'compare')
         .mockImplementationOnce(() => Promise.resolve(true))
