@@ -1,0 +1,57 @@
+name: Backend CI
+run-name: NestJS CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "nsc-events-nestjs/**"
+      - "!nsc-events-nestjs/**/*.md"
+      - "!nsc-events-nestjs/LICENSE*"
+      - "!nsc-events-nestjs/.gitignore"
+      - "!nsc-events-nestjs/.prettierrc"
+      - "!nsc-events-nestjs/.eslintrc.js"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 22
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22.x"
+          cache: "npm"
+          cache-dependency-path: "package-lock.json"
+      - name: Clean install dependencies
+        run: HUSKY=0 npm ci --include=optional
+      - name: Install sharp for Linux platform
+        run: npm install --os=linux --cpu=x64 sharp
+        working-directory: ./nsc-events-nestjs
+      - name: Run linter
+        run: npm run lint
+        working-directory: ./nsc-events-nestjs
+      - name: Compile typescript
+        run: npm run compile
+        working-directory: ./nsc-events-nestjs
+      - name: Test coverage
+        run: npm run test:cov
+        working-directory: ./nsc-events-nestjs
+      - name: Build App
+        run: npm run build --if-present
+        working-directory: ./nsc-events-nestjs
+      # https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts
+      - name: Archive NestJS build
+        uses: actions/upload-artifact@v4
+        with:
+          name: nestjs-build
+          path: nsc-events-nestjs/dist/
+          retention-days: 14
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: nestjs-code-coverage-report
+          path: nsc-events-nestjs/docs/coverage/index.html
+          retention-days: 14

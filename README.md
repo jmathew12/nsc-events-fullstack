@@ -1,11 +1,10 @@
 # NSC EVENTS Fullstack - PostgreSQL Migration
 
-This is a monorepo containing both the frontend (Next.js) and backend (Nest.js) applications for NSC EVENTS, fully migrated from MongoDB to PostgreSQL.
+This is a frontend (Next.js) application for NSC EVENTS, fully migrated from MongoDB to PostgreSQL.
 
 ## Project Structure
 
 - `nsc-events-nextjs`: Frontend application built with Next.js
-- `nsc-events-nestjs`: Backend API built with Nest.js + PostgreSQL + TypeORM
 
 ## Getting Started
 
@@ -45,8 +44,7 @@ cd nsc-events-fullstack
 
 After running the script, you will need to:
 
-1.  **Configure the backend `.env` file** in `nsc-events-nestjs/.env` with your PostgreSQL credentials.
-2.  **Create a PostgreSQL database** named `nsc_events`.
+1.  **Create a PostgreSQL database** named `nsc_events`.
 
 Alternatively, you can follow the manual installation steps below.
 
@@ -59,12 +57,6 @@ cd nsc-events-fullstack
 
 # Install PostgreSQL and remember your password
 
-# Set up the backend
-cd nsc-events-nestjs
-cp .env.example .env
-# Edit .env and update your PostgreSQL password
-npm install
-
 # Set up the frontend
 cd ../nsc-events-nextjs
 cp .env.example .env.local
@@ -75,17 +67,9 @@ npm install
 ### Database Setup
 
 1. Create a PostgreSQL database named `nsc_events`
-2. Update the `.env` file in `nsc-events-nestjs` with your PostgreSQL credentials
 3. The database tables will be automatically created when you start the backend
 
 ### Running the Applications
-
-**Backend:**
-
-```bash
-cd nsc-events-nestjs
-npm run start:dev
-```
 
 **Frontend:**
 
@@ -103,8 +87,6 @@ npm run build
 # Build only frontend
 npm run build:frontend
 
-# Build only backend
-npm run build:backend
 ```
 
 ### Testing
