@@ -6,6 +6,10 @@
     "nsc-events-nextjs"
   ],
   "scripts": {
+    "supabase:start": "npx supabase start --ignore-health-check",
+    "supabase:stop": "npx supabase stop",
+    "supabase:reset": "npm run supabase:stop -- --no-backup && npm run supabase:start",
+    "supabase:studio": "npx supabase studio",
     "prepare": "node -e \"try{require('husky')}catch(e){if(e.code!=='MODULE_NOT_FOUND')throw e}\"",
     "test:frontend": "npm run test --workspace=nsc-events-nextjs",
     "dev:frontend": "npm run dev --workspace=nsc-events-nextjs",
