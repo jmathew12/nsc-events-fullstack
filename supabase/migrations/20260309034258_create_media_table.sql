@@ -15,6 +15,20 @@ CREATE TABLE IF NOT EXISTS public.media (
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.media ENABLE ROW LEVEL SECURITY;
 
+-- Uploader can view/update/delete their own media
+CREATE POLICY "Users can manage own media"
+    ON public.media
+    FOR ALL
+    USING (auth.uid() = uploaded_by_user_id)
+    WITH CHECK (auth.uid() = uploaded_by_user_id);
+
+-- public can access to media
+CREATE POLICY "Public can view media"
+    ON public.media
+    FOR SELECT
+    USING (true);
+
+-- Update updated at    
 CREATE OR REPLACE TRIGGER update_media_updated_at
     BEFORE UPDATE ON public.media
     FOR EACH ROW 

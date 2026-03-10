@@ -17,6 +17,18 @@ CREATE TABLE IF NOT EXISTS public.users (
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 
+-- users can only read/update their own row
+CREATE POLICY "Users can view own profile"
+    ON public.users
+    FOR SELECT
+    USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile"
+    ON public.users
+    FOR UPDATE
+    USING (auth.uid() = id)
+    WITH CHECK (auth.uid() = id);
+    
 CREATE OR REPLACE TRIGGER update_users_updated_at
     BEFORE UPDATE ON public.users
     FOR EACH ROW 
