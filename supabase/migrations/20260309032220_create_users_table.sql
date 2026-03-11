@@ -1,11 +1,14 @@
 -- Migration: create_users_table
 -- Creates users table for NSC Events
 
+CREATE TYPE public.user_role_type AS ENUM ('user', 'creator', 'admin');
+
 CREATE TABLE IF NOT EXISTS public.users (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     first_name varchar NOT NULL, 
     last_name varchar NOT NULL, 
     pronouns varchar, 
+    user_role user_role_type NOT NULL DEFAULT 'user',
     email varchar NOT NULL UNIQUE, 
     google_credentials jsonb,
     reset_password_token varchar UNIQUE,
@@ -16,6 +19,11 @@ CREATE TABLE IF NOT EXISTS public.users (
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins manage all users"
+    ON public.users 
+    FOR ALL 
+    USING ((SELECT user_role FROM public.users WHERE id = auth.uid()) = 'admin');
 
 -- users can only read/update their own row
 CREATE POLICY "Users can view own profile"
